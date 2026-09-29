@@ -101,8 +101,8 @@ td,th{border:1px solid #d1dbea;padding:7px;text-align:left;vertical-align:top}th
 
 <div class="panel"><h2>Java code editor</h2>
 <p class="small">Write one complete program. Use <code>public class Main</code> for the main class. Keep other classes in the same editor without <code>public</code>.</p>
-<textarea id="code" spellcheck="false" aria-label="Java source code" placeholder="import java.util.*;&#10;&#10;public class Main {&#10;    static void show(String command) {&#10;        System.out.println(&quot;@&quot; + command);&#10;    }&#10;&#10;    public static void main(String[] args) {&#10;        // Write your program here&#10;        // Example: show(&quot;TICKET 17|Alex&quot;);&#10;        //          show(&quot;DRAW 3 17&quot;);&#10;    }&#10;}"></textarea>
-<button type="button" id="run">Run Java game</button><button type="button" id="starter" class="secondary">Load starter example</button><button type="button" id="download" class="secondary">Download Main.java</button><button type="button" id="save" class="secondary">Save my work</button>
+<textarea id="code" spellcheck="false" aria-label="Java source code" placeholder="Write your complete Java program here."></textarea>
+<button type="button" id="run">Run Java game</button><button type="button" id="download" class="secondary">Download Main.java</button><button type="button" id="save" class="secondary">Save my work</button>
 <p id="status" aria-live="polite">Loading Java…</p></div>
 <pre id="console"></pre><div id="cjDisplay"></div>
 
@@ -177,37 +177,6 @@ function download(content,filename,type){const url=URL.createObjectURL(new Blob(
 $('download').onclick=()=>{if(!$('code').value.trim()){$('status').textContent='Write code before downloading.';return}download($('code').value,'Main.java','text/x-java-source;charset=utf-8')};
 $('downloadWork').onclick=()=>download(JSON.stringify({...snapshot(),consoleOutput:$('output').textContent,programOutput:rawOutput},null,2),'LuckyDraw_Submission.json','application/json;charset=utf-8');
 
-
-/* ---------- Starter example (shows the commands, not a full answer) ---------- */
-const STARTER=`public class Main {
-    static void show(String command) {
-        System.out.println("@" + command);
-    }
-
-    public static void main(String[] args) {
-        show("HOST Lucky Draw Host");
-
-        // tickets: number|name
-        show("TICKET 12|Alex");
-        show("TICKET 25|Mina");
-        show("TICKET 38|Tom");
-
-        show("SHUFFLE");
-
-        // 3rd prize (3000 THB) goes to ticket 25
-        int ticket = 25;
-        boolean valid = ticket > 0 && ticket < 100;
-        if (valid) {
-            show("DRAW 3 " + ticket);
-        } else {
-            show("EVENT Invalid ticket");
-        }
-
-        show("RESULT DONE Only one prize given - draw the Silver and Gold Coin too!");
-    }
-}
-`;
-$('starter').onclick=()=>{if($('code').value.trim()&&!confirm('Replace the code in the editor with the starter example?'))return;$('code').value=STARTER;$('status').textContent='Starter example loaded. Click Run Java game.'};
 
 /* ---------- Lucky draw engine ---------- */
 const PRIZES={1:'Gold Coin',2:'Silver Coin',3:'฿3,000 cash'};
