@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Dr. Surekha Lanka, Director of BSc - Information Technology and Computer Science, Stamford International University @2026 -->
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lucky Draw — Java</title>
+<style>
+
+:root{font-family:Arial,sans-serif;color:#18243b;background:#eef2f8;--navy:#193860;--gold:#f5b700}
+*{box-sizing:border-box}body{margin:0}
+.wrap{max-width:1150px;margin:26px auto;padding:25px;background:#fff;border-radius:12px;box-shadow:0 5px 24px #1a32501c}
+h1{margin:0;color:var(--navy)}h2{font-size:1.25rem;color:var(--navy);margin:0 0 12px}
+.muted{color:#536277}.small{font-size:.92rem;color:#536277}
+.panel{border:1px solid #d1dbea;border-radius:9px;padding:20px;margin:18px 0}
+.task{background:#f5f3ff;border-left:5px solid #7142bd}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+label{display:block;font-weight:700;margin:12px 0 6px}
+input,textarea{width:100%;padding:10px;border:1px solid #aab9cd;border-radius:6px;font:inherit}
+textarea{resize:vertical}
+#code{min-height:380px;font:14px/1.55 Consolas,Monaco,monospace;tab-size:4}
+#stdin{min-height:145px;font:14px/1.5 Consolas,monospace}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#101e33;color:#e4ecfa;border-radius:8px;padding:15px;min-height:145px;margin:0}
+button{border:0;background:#234f8d;color:#fff;padding:11px 17px;margin:7px 7px 7px 0;border-radius:6px;cursor:pointer;font-weight:bold}
+button:disabled{opacity:.55;cursor:wait}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #f5b700;outline-offset:2px}
+.secondary{background:#475569}.play{background:#147d46}
+.stepnav{display:flex;justify-content:space-between;gap:10px}
+#status{font-weight:700;color:#284d77}
+code{background:#eef2f8;padding:1px 5px;border-radius:4px}
+#console,#cjDisplay{display:none}
+
+/* ---- Lucky draw scene ---- */
+.hud{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.stat{background:#fff4d6;border-radius:8px;padding:7px;text-align:center;font-size:.8rem;color:#7a5a12}
+.stat strong{display:block;font-size:1.2rem;color:#4a3406}
+.bump{animation:bump .45s}@keyframes bump{50%{transform:scale(1.3);color:#c0392b}}
+.scenebox{overflow-x:auto;border-radius:14px}
+.stage{position:relative;height:430px;min-width:640px;overflow:hidden;border-radius:14px;
+ background:radial-gradient(ellipse at 50% 0,#8e1b2e 0,#5a0f1e 55%,#3a0914 100%);color:#fff}
+.lights{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:space-around;pointer-events:none}
+.lights i{width:10px;height:10px;border-radius:50%;background:#ffd54a;box-shadow:0 0 10px #ffd54a;animation:blink 1.2s infinite alternate}
+.lights i:nth-child(even){animation-delay:.6s}@keyframes blink{to{opacity:.25}}
+.hostline{position:absolute;top:26px;left:0;right:0;text-align:center;font-size:1.05rem;font-weight:bold;color:#ffe9a8;letter-spacing:.3px}
+.box{position:absolute;left:30px;top:82px;width:250px;height:250px;border-radius:22px;border:4px solid #ffd54a;background:linear-gradient(160deg,#ffffff30,#ffffff10);box-shadow:inset 0 0 30px #ffffff22,0 10px 30px #0006}
+.box.shake{animation:shake .7s}@keyframes shake{15%,55%{transform:rotate(-5deg)}35%,75%{transform:rotate(5deg)}}
+.box .label{position:absolute;bottom:-34px;left:0;right:0;text-align:center;font-weight:bold;color:#ffe9a8}
+.box .slot{position:absolute;top:-10px;left:50%;width:70px;height:10px;margin-left:-35px;background:#2a0710;border:3px solid #ffd54a;border-radius:6px}
+.tk{position:absolute;padding:4px 8px;background:#fff7e0;color:#7a1025;border:2px dashed #d99d00;border-radius:6px;font-weight:bold;font-size:.8rem;white-space:nowrap;transition:left .5s,top .5s;box-shadow:0 2px 4px #0004}
+.tk small{font-weight:normal;color:#9a6a1a}
+.fly{position:absolute;z-index:6;transition:left 1.1s cubic-bezier(.3,.7,.3,1),top 1.1s cubic-bezier(.3,.7,.3,1),transform 1.1s}
+.podium{position:absolute;right:26px;bottom:0;width:340px;height:350px;display:flex;align-items:flex-end;gap:8px}
+.place{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.step{width:100%;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;color:#5a0f1e}
+.p1 .step{height:120px;background:linear-gradient(#ffe27a,#e5b52a)}.p2 .step{height:90px;background:linear-gradient(#f1f3f5,#b7bec6)}.p3 .step{height:70px;background:linear-gradient(#e9c8a3,#c08a55)}
+.prize{display:flex;flex-direction:column;align-items:center;margin-bottom:6px;text-align:center}
+.coin{width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.72rem;letter-spacing:.5px;box-shadow:inset 0 0 0 4px #ffffff55,0 4px 10px #0006}
+.coin.gold{background:radial-gradient(circle at 35% 30%,#fff6b0,#f5c21b 55%,#b8860b);color:#6b4b00;border:4px solid #c99a06}
+.coin.silver{background:radial-gradient(circle at 35% 30%,#ffffff,#cfd4da 55%,#8a939c);color:#39424b;border:4px solid #9aa3ab}
+.cash{width:86px;height:52px;border-radius:6px;background:linear-gradient(135deg,#9fe0a8,#4caf50);border:3px solid #2e7d32;color:#123d15;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;box-shadow:0 4px 10px #0006}
+.cash small{font-size:.6rem;font-weight:bold}
+.prize .pname{font-size:.78rem;color:#ffe9a8;margin-top:4px;font-weight:bold}
+.winner{min-height:46px;width:100%;margin-bottom:6px;display:flex;align-items:center;justify-content:center}
+.winner .tk{position:static}
+.place.won .coin,.place.won .cash{animation:pop .6s}@keyframes pop{50%{transform:scale(1.35) rotate(10deg)}}
+.place.spin .coin{animation:spin 1s}@keyframes spin{to{transform:rotateY(720deg)}}
+.confetti{position:absolute;top:-20px;font-size:1.2rem;z-index:7;animation:fall 2.4s linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(470px) rotate(540deg);opacity:.2}}
+.banner{margin-top:10px;padding:9px 12px;border-left:4px solid #f5b700;background:#5a0f1e;color:#fff4d6;border-radius:6px;min-height:40px}
+.luck{display:flex;gap:12px;align-items:center;margin-top:6px}
+.dcoin{width:52px;height:52px;border:4px solid #d99d00;border-radius:50%;color:#644800;background:radial-gradient(circle at 35% 30%,#fff7aa,#f5b700 58%,#d18b00);display:none;align-items:center;justify-content:center;font-weight:800;font-size:.65rem;text-transform:uppercase}
+.dcoin.show,.dice.show{display:flex}.dcoin.flip{animation:flip .55s}@keyframes flip{to{transform:rotateY(720deg)}}
+.dice{width:46px;height:46px;border-radius:10px;background:#fff;border:1px solid #cfd8e3;color:#16304f;font-size:1.6rem;display:none;align-items:center;justify-content:center}
+.dice.roll{animation:roll .5s}@keyframes roll{to{transform:rotate(360deg)}}
+.result{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;font-size:2rem;font-weight:800;z-index:9;color:#fff}
+.result.show{display:flex}.result small{font-size:1rem;font-weight:400;margin-top:8px}
+.result.win{background:#147d46e6}.result.lose{background:#8e2a20e6}
+.screen{display:grid;grid-template-columns:1.7fr 1fr;gap:15px}
+.log{background:#f6f8fc;border:1px solid #d1dbea;border-radius:10px;padding:12px;height:560px;overflow:auto;margin:0;list-style:none}
+.log li{padding:5px 4px;border-bottom:1px dashed #d1dbea;font-size:.92rem}.log li.warn{color:#9a4a00;font-weight:bold}
+details summary{cursor:pointer;font-weight:700;color:var(--navy)}
+table{border-collapse:collapse;width:100%;margin-top:10px;font-size:.92rem}
+td,th{border:1px solid #d1dbea;padding:7px;text-align:left;vertical-align:top}th{background:#eef2f8}
+@media(max-width:860px){.grid,.screen{grid-template-columns:1fr}.wrap{margin:0;padding:14px;border-radius:0}.log{height:240px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{button{display:none}body{background:#fff}.wrap{box-shadow:none}}
+.credit{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;justify-content:space-between;margin:-25px -25px 22px;padding:10px 25px;background:#193860;color:#dce7f5;font-size:.82rem;border-radius:12px 12px 0 0}.credit strong{color:#fff;font-size:.92rem}.credit-foot{margin:26px -25px -25px;padding:12px 25px;border-top:1px solid #d1dbea;background:#f5f7fb;color:#536277;font-size:.8rem;text-align:center;border-radius:0 0 12px 12px}@media(max-width:860px){.credit{margin:-14px -14px 18px;padding:10px 14px;border-radius:0;flex-direction:column}.credit-foot{margin:22px -14px -14px;border-radius:0}}
+.wm-center{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-12deg);display:flex;flex-direction:column;align-items:center;gap:1px;pointer-events:none;user-select:none;z-index:50;color:#193860;opacity:.07;text-align:center;font-weight:700;line-height:1.2;white-space:nowrap}.wm-center span:first-child{font-size:.95rem}.wm-center span{font-size:.62rem}@media print{.wm-center{opacity:.1}}
+.screen>*{min-width:0}
+</style>
+<script src="https://cjrtnc.leaningtech.com/4.3/loader.js"></script>
+</head>
+<body>
+
+<div class="wm-center" aria-hidden="true"><span>Dr. Surekha Lanka</span><span>Director of BSc - Information Technology and Computer Science</span><span>Stamford International University @2026</span></div>
+<main class="wrap">
+<header class="credit"><strong>Dr. Surekha Lanka</strong><span>Director of BSc - Information Technology and Computer Science</span><span>Stamford International University @2026</span></header>
+<h1>Lucky Draw — Java</h1>
+<p class="muted">Run a lucky draw with Java! Give every player a ticket, shuffle the box, then draw winners for three prizes: <strong>1st prize Gold Coin</strong>, <strong>2nd prize Silver Coin</strong> and <strong>3rd prize ฿3,000 cash</strong>. One prize per person. Your program's output drives the stage: print commands such as <code>@DRAW 3 17</code> and the page animates them.</p>
+<p class="small">This page uses Java 8. Avoid newer features such as <code>var</code>, records, text blocks and <code>switch -&gt;</code>. The first run downloads Java into your browser and can take up to a minute.</p>
+
+<div class="panel"><div class="grid"><div><label for="name">Student name</label><input id="name" placeholder="Your name"></div><div><label for="id">Student ID</label><input id="id" placeholder="Your student ID"></div></div></div>
+
+<div class="panel"><h2>Java code editor</h2>
+<p class="small">Write one complete program. Use <code>public class Main</code> for the main class. Keep other classes in the same editor without <code>public</code>.</p>
+<textarea id="code" spellcheck="false" aria-label="Java source code" placeholder="import java.util.*;&#10;&#10;public class Main {&#10;    static void show(String command) {&#10;        System.out.println(&quot;@&quot; + command);&#10;    }&#10;&#10;    public static void main(String[] args) {&#10;        // Write your program here&#10;        // Example: show(&quot;TICKET 17|Alex&quot;);&#10;        //          show(&quot;DRAW 3 17&quot;);&#10;    }&#10;}"></textarea>
+<button type="button" id="run">Run Java game</button><button type="button" id="starter" class="secondary">Load starter example</button><button type="button" id="download" class="secondary">Download Main.java</button><button type="button" id="save" class="secondary">Save my work</button>
+<p id="status" aria-live="polite">Loading Java…</p></div>
+<pre id="console"></pre><div id="cjDisplay"></div>
+
+<div class="panel"><h2>Lucky Draw Stage</h2>
+<p class="small">This stage shows only what your Java code prints. It also checks your logic: drawing a ticket that does not exist, giving two prizes to the same person, or giving the same prize twice is flagged in the event log.</p>
+<div class="screen">
+ <div>
+  <div class="hud">
+   <div class="stat">Tickets in box<strong id="gInBox">0</strong></div>
+   <div class="stat">Prizes given<strong id="gGiven">0 / 3</strong></div>
+   <div class="stat">Last draw<strong id="gLast">–</strong></div>
+  </div>
+  <div class="scenebox"><div class="stage" id="stage" aria-live="polite">
+   <div class="lights"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+   <div class="hostline" id="gHost">🎤 Lucky Draw</div>
+   <div class="box" id="box"><div class="slot"></div><span class="label">🎟 Ticket box</span></div>
+   <div class="podium">
+    <div class="place p2" id="place2"><div class="winner" id="win2"></div><div class="prize"><div class="coin silver">SILVER</div><span class="pname">2nd · Silver Coin</span></div><div class="step">2</div></div>
+    <div class="place p1" id="place1"><div class="winner" id="win1"></div><div class="prize"><div class="coin gold">GOLD</div><span class="pname">1st · Gold Coin</span></div><div class="step">1</div></div>
+    <div class="place p3" id="place3"><div class="winner" id="win3"></div><div class="prize"><div class="cash">฿3,000<small>CASH</small></div><span class="pname">3rd · ฿3,000</span></div><div class="step">3</div></div>
+   </div>
+   <div id="gResult" class="result"><span id="gResultTitle"></span><small id="gResultText"></small></div>
+  </div></div>
+  <div class="banner" id="gBanner">Waiting for your code…</div>
+  <div class="luck"><span class="small" id="gTally"></span><div id="coin" class="dcoin">?</div><div id="dice" class="dice">?</div></div>
+ </div>
+ <ul id="gLog" class="log"><li>Game events appear here.</li></ul>
+</div>
+<button type="button" id="replay" class="play">Replay game</button><button type="button" id="demo" class="secondary">Watch demo</button>
+</div>
+
+<div class="panel"><h2>Game inputs (Scanner)</h2>
+<p class="small">Enter every answer your program will read, in order, one per line. The program receives these before it starts; it cannot pause for typing. If your program asks for more answers than you typed, you will see <code>NoSuchElementException</code>.</p>
+<div class="grid"><div><label for="stdin">Standard input</label><textarea id="stdin" spellcheck="false" placeholder="Alex&#10;Mina&#10;Tom&#10;Nok&#10;Sara"></textarea></div><div><label for="output">Console output and errors</label><pre id="output" aria-live="polite">Run your Java program to see results here.</pre></div></div></div>
+
+<div class="panel"><details><summary>Game command reference</summary>
+<p class="small">Print a line that starts with <code>@</code>. It goes to the Lucky Draw Stage, not the console. Add this method to your <code>Main</code> class:</p>
+<pre>static void show(String command) {
+    System.out.println("@" + command);
+}</pre>
+<table>
+<tr><th>Print this</th><th>What happens</th></tr>
+<tr><td><code>@HOST Dr. Lanka</code></td><td>Shows the host's name on the stage</td></tr>
+<tr><td><code>@TICKET 17|Alex</code></td><td>Puts ticket number 17 for Alex into the box (up to 12 tickets, numbers 1 to 999)</td></tr>
+<tr><td><code>@SHUFFLE</code></td><td>Shakes the box and mixes the tickets</td></tr>
+<tr><td><code>@DRAW 3 17</code></td><td>Draws ticket 17 for the 3rd prize (1 = Gold Coin, 2 = Silver Coin, 3 = ฿3,000)</td></tr>
+<tr><td><code>@EVENT And the winner is…</code></td><td>Shows a message in the banner and the log</td></tr>
+<tr><td><code>@COIN heads</code> / <code>@DICE 4</code></td><td>Flips a coin or rolls a dice</td></tr>
+<tr><td><code>@RESULT DONE Congratulations to all winners!</code></td><td>Shows the final screen. The page checks that all 3 prizes went to 3 different people</td></tr>
+</table></details></div>
+
+<div class="panel"><h2>Testing and explanation</h2>
+<label for="tests">Three tests: inputs, expected result, actual result</label><textarea id="tests" rows="5" placeholder="Test 1: ...&#10;Test 2: ...&#10;Test 3: ..."></textarea>
+<label for="explanation">Explain your classes, methods, Random, Boolean logic, Math methods and personal feature</label><textarea id="explanation" rows="5" placeholder="Explain what your own code does."></textarea>
+<button type="button" id="downloadWork" class="secondary">Download my submission (.json)</button></div>
+
+<p class="small">Privacy: your code runs inside your own browser and is not sent to a compiler server. Name and ID stay in this browser unless you download or share a submission. Drafts are stored in this browser, so download your work before changing computers or clearing browser data.</p>
+
+<footer class="credit-foot">© 2026 Dr. Surekha Lanka, Director of BSc - Information Technology and Computer Science, Stamford International University</footer>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+
+/* ---------- Save / download ---------- */
+const keys=['name','id','code','stdin','tests','explanation'];let rawOutput='';
+function snapshot(){return Object.fromEntries(keys.map(k=>[k,$(k).value]))}
+function save(){try{localStorage.setItem('luckyDrawV1',JSON.stringify(snapshot()));$('status').textContent='Draft saved in this browser.'}catch(e){$('status').textContent='Browser storage unavailable; download your work instead.'}}
+try{const d=JSON.parse(localStorage.getItem('luckyDrawV1')||'{}');keys.forEach(k=>{if(typeof d[k]==='string')$(k).value=d[k]})}catch(e){}
+$('save').onclick=save;
+function download(content,filename,type){const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('download').onclick=()=>{if(!$('code').value.trim()){$('status').textContent='Write code before downloading.';return}download($('code').value,'Main.java','text/x-java-source;charset=utf-8')};
+$('downloadWork').onclick=()=>download(JSON.stringify({...snapshot(),consoleOutput:$('output').textContent,programOutput:rawOutput},null,2),'LuckyDraw_Submission.json','application/json;charset=utf-8');
+
+
+/* ---------- Starter example (shows the commands, not a full answer) ---------- */
+const STARTER=`public class Main {
+    static void show(String command) {
+        System.out.println("@" + command);
+    }
+
+    public static void main(String[] args) {
+        show("HOST Lucky Draw Host");
+
+        // tickets: number|name
+        show("TICKET 12|Alex");
+        show("TICKET 25|Mina");
+        show("TICKET 38|Tom");
+
+        show("SHUFFLE");
+
+        // 3rd prize (3000 THB) goes to ticket 25
+        int ticket = 25;
+        boolean valid = ticket > 0 && ticket < 100;
+        if (valid) {
+            show("DRAW 3 " + ticket);
+        } else {
+            show("EVENT Invalid ticket");
+        }
+
+        show("RESULT DONE Only one prize given - draw the Silver and Gold Coin too!");
+    }
+}
+`;
+$('starter').onclick=()=>{if($('code').value.trim()&&!confirm('Replace the code in the editor with the starter example?'))return;$('code').value=STARTER;$('status').textContent='Starter example loaded. Click Run Java game.'};
+
+/* ---------- Lucky draw engine ---------- */
+const PRIZES={1:'Gold Coin',2:'Silver Coin',3:'฿3,000 cash'};
+const DICE=['⚀','⚁','⚂','⚃','⚄','⚅'];
+let g,timer,lastCmds=[];
+function resetGame(){clearTimeout(timer);
+ document.querySelectorAll('#box .tk,.fly,.confetti').forEach(e=>e.remove());
+ [1,2,3].forEach(n=>{$('win'+n).innerHTML='';$('place'+n).classList.remove('won','spin')});
+ g={tickets:{},given:{},heads:0,tails:0};
+ $('gInBox').textContent='0';$('gGiven').textContent='0 / 3';$('gLast').textContent='–';$('gHost').textContent='🎤 Lucky Draw';
+ $('gBanner').textContent='Waiting for your code…';$('coin').className='dcoin';$('dice').className='dice';$('gTally').textContent='';
+ $('gResult').className='result';$('gLog').innerHTML=''}
+function log(text,warn){const li=document.createElement('li');li.textContent=text;if(warn)li.className='warn';$('gLog').appendChild(li);$('gLog').scrollTop=$('gLog').scrollHeight}
+function retrigger(el,cls){if(!el)return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls)}
+function num(cmd,arg){const n=parseInt(arg,10);if(isNaN(n)){log(`⚠ @${cmd} needs a whole number, got "${arg}"`,true);return null}return n}
+function inBox(){return Object.values(g.tickets).filter(t=>!t.drawn)}
+function countBox(){$('gInBox').textContent=inBox().length}
+function placeTk(t){t.el.style.left=(12+Math.random()*150)+'px';t.el.style.top=(14+Math.random()*190)+'px'}
+function tkEl(t){const e=document.createElement('div');e.className='tk';e.textContent='#'+t.no+' ';const s=document.createElement('small');s.textContent=t.name;e.appendChild(s);return e}
+function confetti(){const st=$('stage');const bits=['🎉','✨','🎊','⭐','🪙'];let i=0;const add=()=>{if(i++>=28)return;const c=document.createElement('span');c.className='confetti';c.textContent=bits[i%bits.length];c.style.left=(Math.random()*95)+'%';c.style.animationDelay=(Math.random()*.4)+'s';st.appendChild(c);setTimeout(()=>c.remove(),3000);setTimeout(add,40)};add()}
+function draw(prize,no){
+ const t=g.tickets[no];
+ if(prize<1||prize>3){log('⚠ Prize must be 1 (Gold Coin), 2 (Silver Coin) or 3 (฿3,000)',true);return 0}
+ if(!t){log(`⚠ There is no ticket #${no} in the box. Add it with @TICKET first.`,true);return 0}
+ if(t.drawn){log(`⚠ Ticket #${no} (${t.name}) was already drawn. One prize per ticket!`,true);return 0}
+ const already=Object.values(g.tickets).find(o=>o.drawn&&o.name.toLowerCase()===t.name.toLowerCase());
+ if(already)log(`⚠ ${t.name} already won the ${PRIZES[already.prize]}. One prize per person!`,true);
+ if(g.given[prize])log(`⚠ The ${PRIZES[prize]} was already given to ${g.given[prize].name}.`,true);
+ t.drawn=true;t.prize=prize;g.given[prize]=t;countBox();
+ const st=$('stage').getBoundingClientRect(),from=t.el.getBoundingClientRect(),to=$('win'+prize).getBoundingClientRect();
+ const f=tkEl(t);f.classList.add('fly');f.style.left=(from.left-st.left)+'px';f.style.top=(from.top-st.top)+'px';$('stage').appendChild(f);t.el.remove();
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{f.style.left=(to.left-st.left+to.width/2-f.offsetWidth/2)+'px';f.style.top=(to.top-st.top+8)+'px';f.style.transform='scale(1.15)'}));
+ setTimeout(()=>{f.remove();const w=tkEl(t);$('win'+prize).innerHTML='';$('win'+prize).appendChild(w);retrigger($('place'+prize),'won');if(prize!==3)retrigger($('place'+prize),'spin');if(prize===1)confetti()},1150);
+ $('gLast').textContent='#'+no;retrigger($('gLast'),'bump');const n=Object.keys(g.given).length;$('gGiven').textContent=Math.min(3,n)+' / 3';
+ $('gBanner').textContent=`🎉 ${['','1st','2nd','3rd'][prize]} prize (${PRIZES[prize]}): ticket #${no} — ${t.name}!`;
+ log(`🎟 Drew ticket #${no} — ${t.name} wins the ${PRIZES[prize]}`);return 2200}
+function apply(cmd,arg){
+ switch(cmd){
+  case 'HOST':case 'PLAYER':$('gHost').textContent='🎤 Host: '+arg;log('🎤 Host '+arg);break;
+  case 'TICKET':{const p=arg.split('|').map(s=>s.trim());const no=num('TICKET',p[0]);if(no===null)break;const name=p[1]||'Player';
+   if(no<1||no>999){log('⚠ Ticket numbers must be 1 to 999',true);break}if(g.tickets[no]){log(`⚠ Ticket #${no} already exists (${g.tickets[no].name}). Ticket numbers must be different.`,true);break}
+   if(Object.keys(g.tickets).length>=12){log('⚠ The box holds up to 12 tickets',true);break}
+   const t={no,name,drawn:false};t.el=tkEl(t);$('box').appendChild(t.el);placeTk(t);g.tickets[no]=t;countBox();log(`🎟 Ticket #${no} — ${name}`);break}
+  case 'SHUFFLE':retrigger($('box'),'shake');inBox().forEach(placeTk);log('🔀 Shuffling the tickets…');$('gBanner').textContent='🔀 Shuffling…';return 900;
+  case 'DRAW':{const [p,n]=arg.split(/\s+/);const prize=num('DRAW',p),no=num('DRAW',n);if(prize===null||no===null)break;return draw(prize,no)}
+  case 'EVENT':case 'SAY':case 'CHALLENGE':case 'ACTION':log('📜 '+arg);$('gBanner').textContent=arg;break;
+  case 'COIN':{const v=arg.toLowerCase();const h=['heads','true','h'].includes(v);if(!h&&!['tails','false','t'].includes(v)){log('⚠ @COIN needs heads or tails',true);break}
+   const c=$('coin');c.classList.add('show');retrigger(c,'flip');c.textContent=h?'Heads':'Tails';g.heads+=h?1:0;g.tails+=h?0:1;$('gTally').textContent=`Heads ${g.heads} · Tails ${g.tails}`;log('🪙 Coin: '+(h?'heads':'tails'));break}
+  case 'DICE':{const n=num(cmd,arg);if(n===null)break;const d=$('dice');d.classList.add('show');retrigger(d,'roll');d.textContent=n>=1&&n<=6?DICE[n-1]:n;log('🎲 Rolled '+n);break}
+  case 'RESULT':{const [w,...rest]=arg.split(/\s+/);const ok=!/^(lose|fail)/i.test(w);$('gResult').className='result show '+(ok?'win':'lose');$('gResultTitle').textContent=ok?'🎉 Lucky Draw complete!':'Lucky Draw stopped';$('gResultText').textContent=rest.join(' ');log(ok?'🎉 Lucky Draw complete':'⏹ Lucky Draw stopped');
+   [1,2,3].forEach(n=>{if(!g.given[n])log(`⚠ Rule: the ${PRIZES[n]} (prize ${n}) was not drawn.`,true)});
+   const names=Object.values(g.given).map(t=>t.name.toLowerCase());if(new Set(names).size<names.length)log('⚠ Rule: the 3 prizes must go to 3 different people.',true);break}
+  default:log(`⚠ Unknown command @${cmd}. Check the command reference.`,true)}
+ return 0}
+function parseOutput(text){const plain=[],cmds=[];(text||'').split(/\r?\n/).forEach(line=>{const m=line.match(/^\s*@([A-Za-z]+)\s*(.*)$/);if(m)cmds.push([m[1].toUpperCase(),m[2].trim()]);else plain.push(line)});return{plain:plain.join('\n').replace(/\s+$/,''),cmds}}
+const QUICK={HOST:200,PLAYER:200,TICKET:250};
+function play(cmds){resetGame();lastCmds=cmds;if(!cmds.length){log('No game commands found. Print lines such as @TICKET or @DRAW to animate this stage.',true);return}
+ let i=0;const step=()=>{if(i>=cmds.length)return;const [c,a]=cmds[i++];const extra=apply(c,a)||0;timer=setTimeout(step,extra||QUICK[c]||900)};step()}
+$('replay').onclick=()=>play(lastCmds);
+$('demo').onclick=()=>{play(parseOutput(`@HOST Lucky Draw Host
+@TICKET 12|Alex
+@TICKET 25|Mina
+@TICKET 38|Tom
+@TICKET 41|Nok
+@TICKET 57|Sara
+@TICKET 63|Ben
+@SHUFFLE
+@EVENT Third prize: 3,000 baht!
+@DRAW 3 41
+@SHUFFLE
+@EVENT Second prize: the Silver Coin!
+@DRAW 2 12
+@SHUFFLE
+@EVENT And the Gold Coin goes to…
+@DRAW 1 57
+@RESULT DONE Congratulations Sara, Alex and Nok!`).cmds);$('status').textContent='Demo playing. This is sample output, not your code.'};
+resetGame();
+
+
+/* ---------- Run Java in the browser (CheerpJ) ---------- */
+// tools.jar (the Java 8 compiler) must sit in the same folder as this page.
+const TOOLS='/app'+location.pathname.replace(/[^/]*$/,'')+'tools.jar';
+const CP=TOOLS+':/files/';
+const RUNNER=`public class GameQuestRunner {
+    public static void main(String[] args) throws Exception {
+        System.setIn(new java.io.FileInputStream("/str/stdin.txt"));
+        Main.main(args);
+    }
+}`;
+let javaReady=null,busy=false;
+function startJava(){
+ if(javaReady)return javaReady;
+ if(location.protocol==='file:'){$('status').textContent='Open this page from a web address (for example GitHub Pages), not by double-clicking the file.';return Promise.reject(Error('file protocol'))}
+ if(typeof cheerpjInit!=='function'){$('status').textContent='Java could not load. Check your internet connection and reload the page.';return Promise.reject(Error('no loader'))}
+ javaReady=cheerpjInit({status:'none',version:8}).then(()=>{cheerpjCreateDisplay(-1,-1,$('cjDisplay'));$('status').textContent='Ready. Java runs in your browser.'})
+  .catch(e=>{javaReady=null;$('status').textContent='Java could not start: '+e.message;throw e});
+ return javaReady}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function consoleText(){return $('console').textContent}
+async function run(){
+ if(busy)return;const code=$('code').value;
+ if(!code.trim()){$('status').textContent='Write your Java code first.';return}
+ if(!/class\s+Main\b/.test(code)){$('status').textContent='Your main class must be named Main (public class Main).';return}
+ busy=true;const button=$('run');button.disabled=true;
+ const slow=setTimeout(()=>{$('status').textContent='Still running… If your program has an endless loop, reload the page.'},25000);
+ try{
+  $('status').textContent='Loading Java…';await startJava();
+  const enc=new TextEncoder();
+  cheerpjAddStringFile('/str/Main.java',enc.encode(code));
+  cheerpjAddStringFile('/str/GameQuestRunner.java',enc.encode(RUNNER));
+  cheerpjAddStringFile('/str/stdin.txt',enc.encode($('stdin').value.replace(/\s*$/,'')+'\n'));
+  $('console').textContent='';$('output').textContent='Compiling…';$('status').textContent='Compiling…';
+  const compiled=await cheerpjRunMain('com.sun.tools.javac.Main',CP,'-encoding','UTF-8','-d','/files/','/str/Main.java','/str/GameQuestRunner.java');
+  await wait(200);
+  if(compiled!==0){rawOutput='';$('output').textContent='Compile errors — fix these and run again:\n\n'+(consoleText().split('/str/').join('')||'Unknown compile error.');$('status').textContent='Compile failed.';play([]);return}
+  $('console').textContent='';$('output').textContent='Running…';$('status').textContent='Running your game…';
+  const exit=await cheerpjRunMain('GameQuestRunner',CP);
+  await wait(300);
+  rawOutput=consoleText();const parsed=parseOutput(rawOutput);
+  $('output').textContent=parsed.plain||'(Program completed with no console output.)';
+  play(parsed.cmds);
+  $('status').textContent=exit===0?'Run finished.':'Run finished with an error (see console output).';save();
+ }catch(e){$('output').textContent='Unable to run Java: '+e.message;$('status').textContent='Run failed.'}
+ finally{clearTimeout(slow);busy=false;button.disabled=false}}
+$('run').onclick=run;
+window.addEventListener('load',()=>{startJava().catch(()=>{})});
+
+</script>
+</body>
+</html>
