@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Dr. Surekha Lanka, Director of BSc - Information Technology and Computer Science, Stamford International University @2026 -->
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monkey Jungle Quest — Java</title>
+<style>
+
+:root{font-family:Arial,sans-serif;color:#18243b;background:#eef2f8;--navy:#193860;--gold:#f5b700}
+*{box-sizing:border-box}body{margin:0}
+.wrap{max-width:1150px;margin:26px auto;padding:25px;background:#fff;border-radius:12px;box-shadow:0 5px 24px #1a32501c}
+h1{margin:0;color:var(--navy)}h2{font-size:1.25rem;color:var(--navy);margin:0 0 12px}
+.muted{color:#536277}.small{font-size:.92rem;color:#536277}
+.panel{border:1px solid #d1dbea;border-radius:9px;padding:20px;margin:18px 0}
+.task{background:#f5f3ff;border-left:5px solid #7142bd}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+label{display:block;font-weight:700;margin:12px 0 6px}
+input,textarea{width:100%;padding:10px;border:1px solid #aab9cd;border-radius:6px;font:inherit}
+textarea{resize:vertical}
+#code{min-height:380px;font:14px/1.55 Consolas,Monaco,monospace;tab-size:4}
+#stdin{min-height:145px;font:14px/1.5 Consolas,monospace}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#101e33;color:#e4ecfa;border-radius:8px;padding:15px;min-height:145px;margin:0}
+button{border:0;background:#234f8d;color:#fff;padding:11px 17px;margin:7px 7px 7px 0;border-radius:6px;cursor:pointer;font-weight:bold}
+button:disabled{opacity:.55;cursor:wait}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #f5b700;outline-offset:2px}
+.secondary{background:#475569}.play{background:#147d46}
+.stepnav{display:flex;justify-content:space-between;gap:10px}
+#status{font-weight:700;color:#284d77}
+code{background:#eef2f8;padding:1px 5px;border-radius:4px}
+#console,#cjDisplay{display:none}
+
+/* ---- Jungle scene ---- */
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+.stat{background:#eef7e8;border-radius:8px;padding:7px;text-align:center;font-size:.8rem;color:#48633a}
+.stat strong{display:block;font-size:1.2rem;color:#23421a}
+.bump{animation:bump .45s}@keyframes bump{50%{transform:scale(1.3);color:#d18b00}}
+.cards{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;min-height:10px}
+.mcard{background:#fff8e6;border:1px solid #f0dca8;border-radius:10px;padding:6px 10px;font-size:.88rem}
+.mcard b{color:#5a3d0c}.mcard.done{background:#e6f6e6;border-color:#9fd49f}
+.scenebox{overflow-x:auto;border-radius:12px}
+.scene{position:relative;height:460px;min-width:640px;overflow:hidden;border-radius:12px;
+ background:linear-gradient(#9fdcff 0,#c9ecff 30%,#b7e3a4 70%,#8cc16f 100%)}
+.hills{position:absolute;left:0;right:0;bottom:48px;height:120px;background:radial-gradient(ellipse at 20% 100%,#5e9b45 0 45%,transparent 46%),radial-gradient(ellipse at 75% 100%,#4f8a3a 0 50%,transparent 51%)}
+.ground{position:absolute;left:0;right:0;bottom:0;height:48px;background:repeating-linear-gradient(90deg,#6b4a2b 0 30px,#634427 30px 60px);border-top:6px solid #3f7d2c}
+.sun{position:absolute;top:12px;right:30px;font-size:2rem}
+.bush{position:absolute;bottom:40px;font-size:1.8rem}
+.tree{position:absolute;top:0;bottom:48px;width:0;z-index:1}
+.trunk{position:absolute;left:-10px;width:20px;top:200px;bottom:0;background:linear-gradient(90deg,#5b3a1c,#8a5a2f,#5b3a1c);border-radius:6px 6px 0 0}
+.branch{position:absolute;left:-46px;width:92px;height:8px;top:246px;background:#6f4724;border-radius:5px}
+.canopy{position:absolute;left:-78px;width:156px;height:120px;top:128px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#6fcf5a,#2f8a2a 70%);box-shadow:inset -8px -10px 0 #0000001a}
+.tree.palm .canopy{background:radial-gradient(circle at 40% 40%,#8be06f,#3d9b33 70%);border-radius:50% 50% 45% 45%/60% 60% 40% 40%;height:95px;top:140px}
+.tree.banana .canopy{background:radial-gradient(circle at 35% 35%,#a6e36d,#4f9d2c 70%)}
+.tree .tlabel{position:absolute;left:-40px;width:80px;text-align:center;bottom:6px;font-size:.66rem;color:#fff;background:#0006;border-radius:8px;z-index:2}
+.vine{position:absolute;top:0;width:2px;height:128px;background:#3d7a2a;z-index:0}
+svg.lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
+.fruit{position:absolute;z-index:3;font-size:1.5rem;line-height:1;transform:translate(-50%,-50%)}
+.monkey{position:absolute;z-index:5;transform:translate(-50%,-50%);text-align:center}
+.monkey .spin{display:inline-block;font-size:2.3rem;line-height:1}
+.monkey .face{display:inline-block}.monkey .face.right{transform:scaleX(-1)}
+.monkey .name{display:block;font-size:.64rem;color:#fff;background:#5a3d0cd0;border-radius:8px;padding:0 5px;white-space:nowrap}
+.monkey .badge{position:absolute;top:-12px;right:-14px;background:#fff;border-radius:10px;font-size:.66rem;font-weight:bold;padding:0 4px;color:#5a3d0c;box-shadow:0 1px 3px #0003}
+.monkey.chomp .spin{animation:chomp .25s 4}@keyframes chomp{50%{transform:scale(1.15,.9)}}
+.monkey.happy .spin{animation:happy .5s 2}@keyframes happy{50%{transform:translateY(-10px)}}
+.banner{margin-top:10px;padding:9px 12px;border-left:4px solid #f5b700;background:#23421a;color:#f1f8ea;border-radius:6px;min-height:40px}
+.luck{display:flex;gap:12px;align-items:center;margin-top:6px}
+.coin{width:52px;height:52px;border:4px solid #d99d00;border-radius:50%;color:#644800;background:radial-gradient(circle at 35% 30%,#fff7aa,#f5b700 58%,#d18b00);display:none;align-items:center;justify-content:center;font-weight:800;font-size:.65rem;text-transform:uppercase}
+.coin.show,.dice.show{display:flex}.coin.flip{animation:flip .55s}@keyframes flip{to{transform:rotateY(720deg)}}
+.dice{width:46px;height:46px;border-radius:10px;background:#fff;border:1px solid #cfd8e3;color:#16304f;font-size:1.6rem;display:none;align-items:center;justify-content:center}
+.dice.roll{animation:roll .5s}@keyframes roll{to{transform:rotate(360deg)}}
+.result{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;font-size:2rem;font-weight:800;z-index:9;color:#fff}
+.result.show{display:flex}.result small{font-size:1rem;font-weight:400;margin-top:8px}
+.result.win{background:#147d46e6}.result.lose{background:#8e2a20e6}
+.screen{display:grid;grid-template-columns:1.7fr 1fr;gap:15px}
+.log{background:#f6f8fc;border:1px solid #d1dbea;border-radius:10px;padding:12px;height:640px;overflow:auto;margin:0;list-style:none}
+.log li{padding:5px 4px;border-bottom:1px dashed #d1dbea;font-size:.92rem}.log li.warn{color:#9a4a00;font-weight:bold}
+details summary{cursor:pointer;font-weight:700;color:var(--navy)}
+table{border-collapse:collapse;width:100%;margin-top:10px;font-size:.92rem}
+td,th{border:1px solid #d1dbea;padding:7px;text-align:left;vertical-align:top}th{background:#eef2f8}
+.chars{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.chars span{background:#eef2f8;border-radius:6px;padding:5px 9px}
+.watermark{max-width:340px;text-align:right;line-height:1.35;position:fixed;z-index:9999;right:14px;bottom:12px;padding:8px 12px;border:1px solid rgba(16,42,67,.2);border-radius:7px;background:rgba(255,255,255,.8);color:rgba(16,42,67,.7);font-size:.78rem;font-weight:bold;pointer-events:none;user-select:none}
+@media(max-width:860px){.grid,.screen{grid-template-columns:1fr}.wrap{margin:0;padding:14px;border-radius:0}.log{height:240px}.hud{grid-template-columns:repeat(2,1fr)}.watermark{font-size:.67rem;right:7px;bottom:7px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{button{display:none}body{background:#fff}.wrap{box-shadow:none}}
+.credit{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;justify-content:space-between;margin:-25px -25px 22px;padding:10px 25px;background:#193860;color:#dce7f5;font-size:.82rem;border-radius:12px 12px 0 0}.credit strong{color:#fff;font-size:.92rem}.credit-foot{margin:26px -25px -25px;padding:12px 25px;border-top:1px solid #d1dbea;background:#f5f7fb;color:#536277;font-size:.8rem;text-align:center;border-radius:0 0 12px 12px}@media(max-width:860px){.credit{margin:-14px -14px 18px;padding:10px 14px;border-radius:0;flex-direction:column}.credit-foot{margin:22px -14px -14px;border-radius:0}}
+.wm-center{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-12deg);display:flex;flex-direction:column;align-items:center;gap:1px;pointer-events:none;user-select:none;z-index:50;color:#193860;opacity:.07;text-align:center;font-weight:700;line-height:1.2;white-space:nowrap}.wm-center span:first-child{font-size:.95rem}.wm-center span{font-size:.62rem}@media print{.wm-center{opacity:.1}}
+.screen>*{min-width:0}
+</style>
+<script src="https://cjrtnc.leaningtech.com/4.3/loader.js"></script>
+</head>
+<body>
+
+<div class="wm-center" aria-hidden="true"><span>Dr. Surekha Lanka</span><span>Director of BSc - Information Technology and Computer Science</span><span>Stamford International University @2026</span></div>
+<main class="wrap">
+<header class="credit"><strong>Dr. Surekha Lanka</strong><span>Director of BSc - Information Technology and Computer Science</span><span>Stamford International University @2026</span></header>
+<h1>Monkey Jungle Quest — Java</h1>
+<p class="muted">A group of monkeys is hungry! Write Java code that plants trees and fruit, then makes each monkey jump, swing, hang, roll and climb from tree to tree to pluck and eat fruit. Every monkey must eat at least 3 fruits. Your program's output drives the jungle: print commands such as <code>@JUMP 1 2</code> and the page animates them.</p>
+<p class="small">This page uses Java 8. Avoid newer features such as <code>var</code>, records, text blocks and <code>switch -&gt;</code>. The first run downloads Java into your browser and can take up to a minute.</p>
+
+<div class="panel"><div class="grid"><div><label for="name">Student name</label><input id="name" placeholder="Your name"></div><div><label for="id">Student ID</label><input id="id" placeholder="Your student ID"></div></div></div>
+
+<div class="panel"><h2>Java code editor</h2>
+<p class="small">Write one complete program. Use <code>public class Main</code> for the main class. Keep other classes in the same editor without <code>public</code>.</p>
+<textarea id="code" spellcheck="false" aria-label="Java source code" placeholder="Write your complete Java program here."></textarea>
+<button type="button" id="run">Run Java game</button><button type="button" id="download" class="secondary">Download Main.java</button><button type="button" id="save" class="secondary">Save my work</button>
+<p id="status" aria-live="polite">Loading Java…</p></div>
+<pre id="console"></pre><div id="cjDisplay"></div>
+
+<div class="panel"><h2>Jungle Screen</h2>
+<p class="small">This screen shows only what your Java code prints. It also checks your logic: jumps that are too far, plucking fruit from the wrong tree, or a monkey that ate fewer than 3 fruits are flagged in the event log.</p>
+<div class="screen">
+ <div>
+  <div class="hud">
+   <div class="stat">Fruits eaten<strong id="gEaten">0</strong></div>
+   <div class="stat">Fruits left<strong id="gLeft">0</strong></div>
+   <div class="stat">Points<strong id="gPoints">–</strong></div>
+   <div class="stat">Turn<strong id="gTurn">–</strong></div>
+  </div>
+  <div class="cards" id="cards"></div>
+  <div class="scenebox"><div class="scene" id="scene" aria-live="polite">
+   <div class="sun">☀️</div><div class="hills"></div>
+   <div id="treeLayer"></div>
+   <div class="ground"></div>
+   <div class="bush" style="left:3%">🌿</div><div class="bush" style="left:44%">🌱</div><div class="bush" style="left:92%">🌿</div>
+   <div id="fruitLayer"></div><div id="monkeyLayer"></div>
+   <svg class="lines" id="lines"><line id="vine" stroke="#2f6b1f" stroke-width="3" stroke-linecap="round" visibility="hidden"/></svg>
+   <div id="gResult" class="result"><span id="gResultTitle"></span><small id="gResultText"></small></div>
+  </div></div>
+  <div class="banner" id="gBanner">Waiting for your code…</div>
+  <div class="luck"><span class="small" id="gTally"></span><div id="coin" class="coin">?</div><div id="dice" class="dice">?</div></div>
+ </div>
+ <ul id="gLog" class="log"><li>Game events appear here.</li></ul>
+</div>
+<button type="button" id="replay" class="play">Replay game</button><button type="button" id="demo" class="secondary">Watch demo</button>
+</div>
+
+<div class="panel"><h2>Game inputs (Scanner)</h2>
+<p class="small">Enter every answer your program will read, in order, one per line. The program receives these before it starts; it cannot pause for typing. If your program asks for more answers than you typed, you will see <code>NoSuchElementException</code>.</p>
+<div class="grid"><div><label for="stdin">Standard input</label><textarea id="stdin" spellcheck="false" placeholder="Momo&#10;Kiki&#10;Bobo&#10;20"></textarea></div><div><label for="output">Console output and errors</label><pre id="output" aria-live="polite">Run your Java program to see results here.</pre></div></div></div>
+
+<div class="panel"><details><summary>Game command reference</summary>
+<p class="small">Print a line that starts with <code>@</code>. It goes to the Jungle Screen, not the console. The jungle is 0 to 20 wide (x). Add this method to your <code>Main</code> class:</p>
+<pre>static void show(String command) {
+    System.out.println("@" + command);
+}</pre>
+<p class="small">Tree types: <code>tree</code>, <code>palm</code>, <code>banana</code>. Fruit types:</p>
+<div class="chars"><span>banana 🍌</span><span>mango 🥭</span><span>apple 🍎</span><span>orange 🍊</span><span>coconut 🥥</span><span>grapes 🍇</span><span>pineapple 🍍</span><span>peach 🍑</span><span>cherry 🍒</span></div>
+<table>
+<tr><th>Print this</th><th>What happens</th></tr>
+<tr><td><code>@PLAYER Jungle Keeper</code></td><td>Shows your name in the banner</td></tr>
+<tr><td><code>@TREE 1|3|banana</code></td><td>Plants tree id 1 at x 3 (types: tree, palm, banana)</td></tr>
+<tr><td><code>@FRUIT 11|1|banana|10</code></td><td>Puts fruit id 11 on tree 1, type banana, worth 10 points (up to 8 per tree)</td></tr>
+<tr><td><code>@MONKEY 1|Momo|1</code></td><td>Adds monkey id 1 named Momo, sitting in tree 1</td></tr>
+<tr><td><code>@JUMP 1 2</code></td><td>Monkey 1 jumps to tree 2 (trees at most 6 apart)</td></tr>
+<tr><td><code>@SWING 1 4</code></td><td>Monkey 1 swings on a vine to tree 4 (at most 12 apart)</td></tr>
+<tr><td><code>@HANG 1</code></td><td>Monkey 1 hangs upside down from the branch</td></tr>
+<tr><td><code>@ROLL 1 15</code></td><td>Monkey 1 drops to the ground and rolls to x 15</td></tr>
+<tr><td><code>@CLIMB 1 5</code></td><td>Monkey 1 climbs tree 5 (must be on the ground next to it)</td></tr>
+<tr><td><code>@CHECK 1 11 true</code></td><td>Shows your check "is fruit 11 on monkey 1's tree?" A wrong check is flagged</td></tr>
+<tr><td><code>@PLUCK 1 11</code></td><td>Monkey 1 plucks fruit 11 (must be in the same tree)</td></tr>
+<tr><td><code>@EAT 1</code></td><td>Monkey 1 eats the fruit it is holding</td></tr>
+<tr><td><code>@POINTS 50</code> / <code>@TURN 3</code></td><td>Updates the counters</td></tr>
+<tr><td><code>@EVENT Momo is full!</code> / <code>@ACTION Swing</code> / <code>@CHALLENGE Rain</code></td><td>Adds a message to the log or the banner</td></tr>
+<tr><td><code>@COIN heads</code> / <code>@DICE 4</code></td><td>Flips the coin or rolls the dice</td></tr>
+<tr><td><code>@RESULT WIN All monkeys are full</code></td><td>Shows the final screen. The page checks that every monkey ate at least 3 fruits</td></tr>
+</table></details></div>
+
+<div class="panel"><h2>Testing and explanation</h2>
+<label for="tests">Three tests: inputs, expected result, actual result</label><textarea id="tests" rows="5" placeholder="Test 1: ...&#10;Test 2: ...&#10;Test 3: ..."></textarea>
+<label for="explanation">Explain your classes, methods, Random, Boolean logic, Math methods and personal feature</label><textarea id="explanation" rows="5" placeholder="Explain what your own code does."></textarea>
+<button type="button" id="downloadWork" class="secondary">Download my submission (.json)</button></div>
+
+<p class="small">Privacy: your code runs inside your own browser and is not sent to a compiler server. Name and ID stay in this browser unless you download or share a submission. Drafts are stored in this browser, so download your work before changing computers or clearing browser data.</p>
+<footer class="credit-foot">© 2026 Dr. Surekha Lanka, Director of BSc - Information Technology and Computer Science, Stamford International University</footer>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+
+/* ---------- Save / download ---------- */
+const keys=['name','id','code','stdin','tests','explanation'];let rawOutput='';
+function snapshot(){return Object.fromEntries(keys.map(k=>[k,$(k).value]))}
+function save(){try{localStorage.setItem('jungleQuestV1',JSON.stringify(snapshot()));$('status').textContent='Draft saved in this browser.'}catch(e){$('status').textContent='Browser storage unavailable; download your work instead.'}}
+try{const d=JSON.parse(localStorage.getItem('jungleQuestV1')||'{}');keys.forEach(k=>{if(typeof d[k]==='string')$(k).value=d[k]})}catch(e){}
+$('save').onclick=save;
+function download(content,filename,type){const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('download').onclick=()=>{if(!$('code').value.trim()){$('status').textContent='Write code before downloading.';return}download($('code').value,'Main.java','text/x-java-source;charset=utf-8')};
+$('downloadWork').onclick=()=>download(JSON.stringify({...snapshot(),consoleOutput:$('output').textContent,programOutput:rawOutput},null,2),'JungleQuest_Submission.json','application/json;charset=utf-8');
+
+
+/* ---------- Jungle engine ---------- */
+const FRUITS={banana:'🍌',mango:'🥭',apple:'🍎',orange:'🍊',coconut:'🥥',grapes:'🍇',pineapple:'🍍',peach:'🍑',cherry:'🍒'};
+const FSLOTS=[[-44,-22],[38,-28],[-12,16],[46,12],[4,-44],[-52,14],[20,-6],[-26,-46]];
+const MSLOTS=[0,-34,34,-58,58];
+const DICE=['⚀','⚁','⚂','⚃','⚄','⚅'];
+const H=460,GROUND=412,SIT=228,HANGY=272,CANOPY=188,FLOOR=GROUND-24;
+const W=()=>$('scene').clientWidth;
+const X=x=>50+x/20*(W()-100);
+let g,timer,lastCmds=[];
+function resetGame(){clearTimeout(timer);$('treeLayer').innerHTML='';$('fruitLayer').innerHTML='';$('monkeyLayer').innerHTML='';$('cards').innerHTML='';
+ g={trees:{},fruits:{},monkeys:{},eaten:0,heads:0,tails:0};
+ $('gEaten').textContent='0';$('gLeft').textContent='0';$('gPoints').textContent='–';$('gTurn').textContent='–';
+ $('gBanner').textContent='Waiting for your code…';$('coin').className='coin';$('dice').className='dice';$('gTally').textContent='';
+ $('gResult').className='result';$('vine').setAttribute('visibility','hidden');$('gLog').innerHTML=''}
+function log(text,warn){const li=document.createElement('li');li.textContent=text;if(warn)li.className='warn';$('gLog').appendChild(li);$('gLog').scrollTop=$('gLog').scrollHeight}
+function retrigger(el,cls){if(!el)return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls)}
+function num(cmd,arg){const n=parseInt(arg,10);if(isNaN(n)){log(`⚠ @${cmd} needs a whole number, got "${arg}"`,true);return null}return n}
+function getM(id,cmd){const m=g.monkeys[id];if(!m)log(`⚠ @${cmd}: there is no monkey with id ${id}. Create it with @MONKEY first.`,true);return m}
+function getT(id,cmd){const t=g.trees[id];if(!t)log(`⚠ @${cmd}: there is no tree with id ${id}. Create it with @TREE first.`,true);return t}
+function fruitsLeft(){return Object.values(g.fruits).filter(f=>f.state==='tree').length}
+function updateLeft(){$('gLeft').textContent=fruitsLeft()}
+function freeSlot(tree,m){const used=Object.values(g.monkeys).filter(o=>o!==m&&o.tree===tree).map(o=>o.slot);let s=0;while(used.includes(s))s++;return s}
+function locPx(m){if(m.tree){const t=g.trees[m.tree];return {x:X(t.x)+MSLOTS[m.slot%MSLOTS.length],y:m.hanging?HANGY:SIT}}return {x:X(m.gx),y:FLOOR}}
+function fruitPx(f){const t=g.trees[f.tree];const s=FSLOTS[f.slot%FSLOTS.length];return {x:X(t.x)+s[0],y:CANOPY+s[1]}}
+function card(m){let c=document.getElementById('card'+m.id);if(!c){c=document.createElement('div');c.className='mcard';c.id='card'+m.id;$('cards').appendChild(c)}
+ c.textContent='';const b=document.createElement('b');b.textContent='🐒 '+m.name;c.appendChild(b);c.append(` — ate ${m.eaten}/3 ${m.eaten>=3?'✅':''}`);c.classList.toggle('done',m.eaten>=3);
+ m.el.querySelector('.badge').textContent=m.eaten?'🍴'+m.eaten:''}
+function addTree(arg){const p=arg.split('|').map(s=>s.trim());if(p.length<2){log('⚠ @TREE needs id|x|type',true);return}
+ const id=p[0];let x=num('TREE',p[1]);if(x===null)return;if(x<0||x>20){log('⚠ Tree x must be 0 to 20',true);x=Math.max(0,Math.min(20,x))}
+ const type=(p[2]||'tree').toLowerCase();if(!['tree','palm','banana'].includes(type))log('⚠ Tree type should be tree, palm or banana',true);
+ if(g.trees[id]){log('⚠ Tree id '+id+' was used twice',true);return}
+ const el=document.createElement('div');el.className='tree '+type;el.innerHTML='<div class="vine" style="left:-60px"></div><div class="vine" style="left:52px;height:150px"></div><div class="trunk"></div><div class="branch"></div><div class="canopy"></div><span class="tlabel"></span>';
+ el.querySelector('.tlabel').textContent='tree '+id+' · x '+x;$('treeLayer').appendChild(el);g.trees[id]={id,x,type,el,fcount:0};el.style.left=X(x)+'px';log(`🌳 Tree ${id} (${type}) at x ${x}`)}
+function addFruit(arg){const p=arg.split('|').map(s=>s.trim());if(p.length<3){log('⚠ @FRUIT needs id|tree|type|points',true);return}
+ const [id,tid,typeRaw]=p;const t=getT(tid,'FRUIT');if(!t)return;const type=typeRaw.toLowerCase();const e=FRUITS[type];if(!e)log(`⚠ Unknown fruit type "${typeRaw}"`,true);
+ if(g.fruits[id]){log('⚠ Fruit id '+id+' was used twice',true);return}if(t.fcount>=8){log('⚠ Tree '+tid+' already has 8 fruits',true);return}
+ const el=document.createElement('div');el.className='fruit';el.textContent=e||'🍌';$('fruitLayer').appendChild(el);
+ const f={id,tree:tid,type,points:parseInt(p[3],10)||0,slot:t.fcount++,el,state:'tree',mot:null,holder:null};g.fruits[id]=f;const pos=fruitPx(f);f.x=pos.x;f.y=pos.y;updateLeft()}
+function addMonkey(arg){const p=arg.split('|').map(s=>s.trim());if(p.length<3){log('⚠ @MONKEY needs id|name|tree',true);return}
+ const [id,name,tid]=p;const t=getT(tid,'MONKEY');if(!t)return;if(g.monkeys[id]){log('⚠ Monkey id '+id+' was used twice',true);return}
+ const el=document.createElement('div');el.className='monkey';el.innerHTML='<span class="badge"></span><span class="spin"><span class="face">🐒</span></span><span class="name"></span>';el.querySelector('.name').textContent=name;$('monkeyLayer').appendChild(el);
+ const m={id,name,tree:tid,gx:t.x,hanging:false,holding:null,eaten:0,el,mot:null,rot:0};m.slot=freeSlot(tid,m);const pos=locPx(m);m.x=pos.x;m.y=pos.y;g.monkeys[id]=m;card(m);log(`🐒 ${name} is sitting in tree ${tid}`)}
+function startMove(m,kind,dur,after){const from={x:m.x,y:m.y};after();const to=locPx(m);m.mot={kind,from,to,t0:performance.now(),dur,dir:to.x>=from.x?1:-1,wasHang:kind==='HANG'};
+ m.el.querySelector('.face').classList.toggle('right',to.x>from.x+2||(Math.abs(to.x-from.x)<=2&&m.el.querySelector('.face').classList.contains('right')))}
+const ease=p=>p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+function frame(t){
+ if(g){let vine=null;
+  Object.values(g.monkeys).forEach(m=>{let x,y,rot=m.hanging?180:0;
+   if(m.mot){const mo=m.mot;const p=Math.min(1,(t-mo.t0)/mo.dur),e=ease(p);x=mo.from.x+(mo.to.x-mo.from.x)*e;y=mo.from.y+(mo.to.y-mo.from.y)*e;
+    if(mo.kind==='JUMP'){y-=Math.sin(Math.PI*p)*95;rot=(m.hanging?180:0)}
+    else if(mo.kind==='SWING'){y+=Math.sin(Math.PI*p)*80;rot=Math.sin(Math.PI*2*p)*30;const px=(mo.from.x+mo.to.x)/2;vine=[px,40,x,y]}
+    else if(mo.kind==='ROLL'){rot=p*720*mo.dir}
+    else if(mo.kind==='HANG'){rot=180*e}
+    if(p>=1){m.mot=null;m.x=mo.to.x;m.y=mo.to.y}}
+   else{const pos=locPx(m);m.x+=(pos.x-m.x)*.2;m.y+=(pos.y-m.y)*.2;x=m.x;y=m.y;if(m.hanging)rot=180+Math.sin(t/350+(+m.slot))*10}
+   if(m.mot){m.cx=x;m.cy=y}else{m.cx=m.x;m.cy=m.y}
+   m.el.style.left=m.cx+'px';m.el.style.top=m.cy+'px';m.el.querySelector('.spin').style.transform=`rotate(${rot}deg)`});
+  const v=$('vine');if(vine){v.setAttribute('visibility','visible');v.setAttribute('x1',vine[0]);v.setAttribute('y1',vine[1]);v.setAttribute('x2',vine[2]);v.setAttribute('y2',vine[3]-12)}else v.setAttribute('visibility','hidden');
+  Object.values(g.fruits).forEach(f=>{if(f.state==='gone')return;let x,y,s=1;
+   if(f.state==='tree'){const p=fruitPx(f);x=p.x;y=p.y+Math.sin(t/700+f.slot)*2}
+   else{const m=g.monkeys[f.holder];const hx=m.cx+14,hy=m.cy+(m.hanging?10:-2);
+    if(f.mot){const p=Math.min(1,(t-f.mot.t0)/f.mot.dur);const tx=f.mot.eat?m.cx:hx,ty=f.mot.eat?m.cy-6:hy;x=f.mot.fx+(tx-f.mot.fx)*p;y=f.mot.fy+(ty-f.mot.fy)*p-(f.mot.eat?0:Math.sin(Math.PI*p)*25);s=f.mot.eat?1-p:1;
+     if(p>=1){if(f.mot.eat){f.state='gone';f.el.remove();return}f.mot=null}}
+    else{x=hx;y=hy}}
+   f.x=x;f.y=y;f.el.style.left=x+'px';f.el.style.top=y+'px';f.el.style.transform=`translate(-50%,-50%) scale(${s})`})}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+window.addEventListener('resize',()=>{if(g)Object.values(g.trees).forEach(t=>t.el.style.left=X(t.x)+'px')});
+function treeMove(cmd,arg,maxDist,dur){const [mid,tid]=arg.split(/\s+/);const m=getM(mid,cmd),t=getT(tid,cmd);if(!m||!t)return 0;
+ if(!m.tree){log(`⚠ ${m.name} is on the ground. Use @CLIMB before @${cmd}.`,true);return 0}
+ if(m.tree===tid){log(`⚠ ${m.name} is already in tree ${tid}`,true);return 0}
+ const d=Math.abs(g.trees[m.tree].x-t.x);if(d>maxDist)log(`⚠ Tree ${tid} is ${d} away — too far to ${cmd.toLowerCase()} (max ${maxDist}). ${cmd==='JUMP'?'Try @SWING.':'Try @ROLL and @CLIMB.'}`,true);
+ startMove(m,cmd,dur,()=>{m.tree=tid;m.hanging=false;m.slot=freeSlot(tid,m)});log(`${cmd==='JUMP'?'🦘':'🌿'} ${m.name} ${cmd==='JUMP'?'jumps':'swings on a vine'} to tree ${tid} (distance ${d})`);return dur+200}
+function apply(cmd,arg){
+ switch(cmd){
+  case 'PLAYER':$('gBanner').textContent='Jungle keeper: '+arg;log('🧑 Jungle keeper '+arg);break;
+  case 'TREE':addTree(arg);break;
+  case 'FRUIT':addFruit(arg);break;
+  case 'MONKEY':addMonkey(arg);break;
+  case 'JUMP':return treeMove('JUMP',arg,6,1100);
+  case 'SWING':return treeMove('SWING',arg,12,1700);
+  case 'HANG':{const m=getM(arg,'HANG');if(!m)break;if(!m.tree){log(`⚠ ${m.name} is on the ground and cannot hang`,true);break}if(m.hanging){log(`⚠ ${m.name} is already hanging`,true);break}
+   startMove(m,'HANG',800,()=>{m.hanging=true});log(`🙃 ${m.name} hangs upside down`);return 1000}
+  case 'ROLL':{const [mid,xs]=arg.split(/\s+/);const m=getM(mid,'ROLL');if(!m)break;let x=num('ROLL',xs);if(x===null)break;x=Math.max(0,Math.min(20,x));
+   startMove(m,'ROLL',1400,()=>{m.tree=null;m.hanging=false;m.gx=x});log(`🌀 ${m.name} rolls on the ground to x ${x}`);return 1600}
+  case 'CLIMB':{const [mid,tid]=arg.split(/\s+/);const m=getM(mid,'CLIMB'),t=getT(tid,'CLIMB');if(!m||!t)break;
+   if(m.tree)log(`⚠ ${m.name} is already in a tree. Use @JUMP or @SWING.`,true);else if(Math.abs(m.gx-t.x)>1)log(`⚠ ${m.name} is at x ${m.gx}, too far from tree ${tid} at x ${t.x}. Roll there first.`,true);
+   startMove(m,'CLIMB',1100,()=>{m.tree=tid;m.hanging=false;m.slot=freeSlot(tid,m)});log(`🧗 ${m.name} climbs tree ${tid}`);return 1300}
+  case 'CHECK':{const [mid,fid,ans='']=arg.split(/\s+/);const m=getM(mid,'CHECK');const f=g.fruits[fid];if(!m)break;if(!f){log('⚠ @CHECK: there is no fruit '+fid,true);break}
+   if(!ans){log('⚠ @CHECK needs monkey, fruit and true/false',true);break}const said=/^(true|yes|1)$/i.test(ans),real=f.state==='tree'&&m.tree===f.tree;
+   log(`🔍 Is fruit ${fid} in ${m.name}'s tree? ${said?'yes':'no'}`);if(said!==real)log(`⚠ Your check says ${said?'yes':'no'}, but fruit ${fid} is ${f.state!=='tree'?'already taken':'in tree '+f.tree} and ${m.name} is ${m.tree?'in tree '+m.tree:'on the ground'}.`,true);break}
+  case 'PLUCK':{const [mid,fid]=arg.split(/\s+/);const m=getM(mid,'PLUCK');if(!m)break;const f=g.fruits[fid];if(!f){log('⚠ @PLUCK: there is no fruit '+fid,true);break}
+   if(f.state!=='tree'){log('⚠ Fruit '+fid+' was already taken',true);break}if(m.holding){log(`⚠ ${m.name} is already holding a fruit. @EAT it first.`,true);break}
+   if(m.tree!==f.tree)log(`⚠ ${m.name} is ${m.tree?'in tree '+m.tree:'on the ground'}, but fruit ${fid} is in tree ${f.tree}. Move there first!`,true);
+   f.state='held';f.holder=mid;f.mot={fx:f.x,fy:f.y,t0:performance.now(),dur:650};m.holding=fid;updateLeft();log(`${f.el.textContent} ${m.name} plucks the ${f.type}`);return 850}
+  case 'EAT':{const m=getM(arg,'EAT');if(!m)break;if(!m.holding){log(`⚠ ${m.name} has no fruit to eat. @PLUCK first.`,true);break}
+   const f=g.fruits[m.holding];f.mot={fx:f.x,fy:f.y,t0:performance.now(),dur:900,eat:true};m.holding=null;m.eaten++;g.eaten++;$('gEaten').textContent=g.eaten;retrigger($('gEaten'),'bump');
+   retrigger(m.el,'chomp');card(m);log(`😋 ${m.name} eats the ${f.type} (${m.eaten} eaten)`);if(m.eaten===3){setTimeout(()=>retrigger(m.el,'happy'),900);log(`✅ ${m.name} has eaten 3 fruits!`)}return 1100}
+  case 'POINTS':{const n=num(cmd,arg);if(n===null)break;$('gPoints').textContent=n;retrigger($('gPoints'),'bump');break}
+  case 'TURN':$('gTurn').textContent=arg;break;
+  case 'LEVEL':log('⭐ Level '+arg);break;
+  case 'CHALLENGE':$('gBanner').textContent='🌴 '+arg;log('🌴 '+arg);break;
+  case 'ACTION':log('🎮 '+arg);break;
+  case 'EVENT':case 'SAY':log('📜 '+arg);$('gBanner').textContent=arg;break;
+  case 'COIN':{const v=arg.toLowerCase();const h=['heads','true','h'].includes(v);if(!h&&!['tails','false','t'].includes(v)){log('⚠ @COIN needs heads or tails',true);break}
+   const c=$('coin');c.classList.add('show');retrigger(c,'flip');c.textContent=h?'Heads':'Tails';g.heads+=h?1:0;g.tails+=h?0:1;$('gTally').textContent=`Heads ${g.heads} · Tails ${g.tails}`;log('🪙 Coin: '+(h?'heads':'tails'));break}
+  case 'DICE':{const n=num(cmd,arg);if(n===null)break;const d=$('dice');d.classList.add('show');retrigger(d,'roll');d.textContent=n>=1&&n<=6?DICE[n-1]:n;log('🎲 Rolled '+n);break}
+  case 'RESULT':{const [w,...rest]=arg.split(/\s+/);const win=/^win/i.test(w);$('gResult').className='result show '+(win?'win':'lose');$('gResultTitle').textContent=win?'🏆 You win!':'🍃 Game over';$('gResultText').textContent=rest.join(' ');log(win?'🏆 WIN':'🍃 LOSE');
+   const ms=Object.values(g.monkeys);if(ms.length<3)log(`⚠ Rule: use a group of at least 3 monkeys (you have ${ms.length}).`,true);
+   const hungry=ms.filter(m=>m.eaten<3);hungry.forEach(m=>log(`⚠ Rule: every monkey must eat at least 3 fruits — ${m.name} ate ${m.eaten}.`,true));
+   if(win&&hungry.length)log('⚠ Your program says WIN, but not every monkey ate 3 fruits.',true);break}
+  default:log(`⚠ Unknown command @${cmd}. Check the command reference.`,true)}
+ return 0}
+function parseOutput(text){const plain=[],cmds=[];(text||'').split(/\r?\n/).forEach(line=>{const m=line.match(/^\s*@([A-Za-z]+)\s*(.*)$/);if(m)cmds.push([m[1].toUpperCase(),m[2].trim()]);else plain.push(line)});return{plain:plain.join('\n').replace(/\s+$/,''),cmds}}
+const QUICK={PLAYER:150,TREE:150,FRUIT:60,MONKEY:250,POINTS:100,TURN:100,CHECK:500};
+function play(cmds){resetGame();lastCmds=cmds;if(!cmds.length){log('No game commands found. Print lines such as @TREE or @MONKEY to animate this screen.',true);return}
+ let i=0;const step=()=>{if(i>=cmds.length)return;const [c,a]=cmds[i++];const extra=apply(c,a)||0;timer=setTimeout(step,extra||QUICK[c]||600)};step()}
+$('replay').onclick=()=>play(lastCmds);
+$('demo').onclick=()=>{play(parseOutput(`@PLAYER Jungle Keeper
+@TREE 1|2|banana
+@TREE 2|6|tree
+@TREE 3|10|palm
+@TREE 4|18|tree
+@FRUIT 11|1|banana|10
+@FRUIT 12|1|banana|10
+@FRUIT 21|2|mango|15
+@FRUIT 22|2|apple|10
+@FRUIT 23|2|orange|10
+@FRUIT 31|3|coconut|20
+@FRUIT 32|3|pineapple|15
+@FRUIT 41|4|grapes|10
+@FRUIT 42|4|cherry|10
+@MONKEY 1|Momo|1
+@MONKEY 2|Kiki|2
+@MONKEY 3|Bobo|3
+@TURN 1
+@CHECK 1 11 true
+@PLUCK 1 11
+@EAT 1
+@PLUCK 2 21
+@EAT 2
+@PLUCK 3 31
+@EAT 3
+@POINTS 45
+@TURN 2
+@PLUCK 1 12
+@EAT 1
+@HANG 2
+@PLUCK 2 22
+@EAT 2
+@SWING 3 4
+@PLUCK 3 41
+@EAT 3
+@POINTS 75
+@TURN 3
+@JUMP 1 2
+@PLUCK 1 23
+@EAT 1
+@SWING 2 3
+@PLUCK 2 32
+@EAT 2
+@ROLL 3 17
+@CLIMB 3 4
+@PLUCK 3 42
+@EAT 3
+@POINTS 110
+@RESULT WIN All monkeys are full - 110 points`).cmds);$('status').textContent='Demo playing. This is sample output, not your code.'};
+resetGame();
+
+/* ---------- Run Java in the browser (CheerpJ) ---------- */
+// tools.jar (the Java 8 compiler) must sit in the same folder as this page.
+const TOOLS='/app'+location.pathname.replace(/[^/]*$/,'')+'tools.jar';
+const CP=TOOLS+':/files/';
+const RUNNER=`public class GameQuestRunner {
+    public static void main(String[] args) throws Exception {
+        System.setIn(new java.io.FileInputStream("/str/stdin.txt"));
+        Main.main(args);
+    }
+}`;
+let javaReady=null,busy=false;
+function startJava(){
+ if(javaReady)return javaReady;
+ if(location.protocol==='file:'){$('status').textContent='Open this page from a web address (for example GitHub Pages), not by double-clicking the file.';return Promise.reject(Error('file protocol'))}
+ if(typeof cheerpjInit!=='function'){$('status').textContent='Java could not load. Check your internet connection and reload the page.';return Promise.reject(Error('no loader'))}
+ javaReady=cheerpjInit({status:'none',version:8}).then(()=>{cheerpjCreateDisplay(-1,-1,$('cjDisplay'));$('status').textContent='Ready. Java runs in your browser.'})
+  .catch(e=>{javaReady=null;$('status').textContent='Java could not start: '+e.message;throw e});
+ return javaReady}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function consoleText(){return $('console').textContent}
+async function run(){
+ if(busy)return;const code=$('code').value;
+ if(!code.trim()){$('status').textContent='Write your Java code first.';return}
+ if(!/class\s+Main\b/.test(code)){$('status').textContent='Your main class must be named Main (public class Main).';return}
+ busy=true;const button=$('run');button.disabled=true;
+ const slow=setTimeout(()=>{$('status').textContent='Still running… If your program has an endless loop, reload the page.'},25000);
+ try{
+  $('status').textContent='Loading Java…';await startJava();
+  const enc=new TextEncoder();
+  cheerpjAddStringFile('/str/Main.java',enc.encode(code));
+  cheerpjAddStringFile('/str/GameQuestRunner.java',enc.encode(RUNNER));
+  cheerpjAddStringFile('/str/stdin.txt',enc.encode($('stdin').value.replace(/\s*$/,'')+'\n'));
+  $('console').textContent='';$('output').textContent='Compiling…';$('status').textContent='Compiling…';
+  const compiled=await cheerpjRunMain('com.sun.tools.javac.Main',CP,'-encoding','UTF-8','-d','/files/','/str/Main.java','/str/GameQuestRunner.java');
+  await wait(200);
+  if(compiled!==0){rawOutput='';$('output').textContent='Compile errors — fix these and run again:\n\n'+(consoleText().split('/str/').join('')||'Unknown compile error.');$('status').textContent='Compile failed.';play([]);return}
+  $('console').textContent='';$('output').textContent='Running…';$('status').textContent='Running your game…';
+  const exit=await cheerpjRunMain('GameQuestRunner',CP);
+  await wait(300);
+  rawOutput=consoleText();const parsed=parseOutput(rawOutput);
+  $('output').textContent=parsed.plain||'(Program completed with no console output.)';
+  play(parsed.cmds);
+  $('status').textContent=exit===0?'Run finished.':'Run finished with an error (see console output).';save();
+ }catch(e){$('output').textContent='Unable to run Java: '+e.message;$('status').textContent='Run failed.'}
+ finally{clearTimeout(slow);busy=false;button.disabled=false}}
+$('run').onclick=run;
+window.addEventListener('load',()=>{startJava().catch(()=>{})});
+
+</script>
+</body>
+</html>
